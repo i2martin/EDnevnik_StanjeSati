@@ -6,9 +6,9 @@ import time
 #broj tjedana - za sad potrebno ručno upisati
 number_of_weeks = 15
 expected_number_of_hours = 0
+list_to_file = []
 driver = webdriver.Chrome('./chromedriver')
 driver.get("https://e-dnevnik.skole.hr/")
-
 username = driver.find_element(By.ID, "username")
 username.send_keys("")
 pass_key = driver.find_element(By.ID, "password")
@@ -73,6 +73,10 @@ for single_class in classes:
         # zapiši razred, predmet i broj održanih sati
         expected_number_of_hours = expected_number_of_hours * number_of_weeks
         missing_hours = int(no_of_hours.text) - expected_number_of_hours
-        with open('stanje_sati.txt', 'a') as file:
-            line = subject_name.text + "," + no_of_hours.text + "," + str(expected_number_of_hours) + "," + str(missing_hours) + "\n"
-            file.write(line)
+        line = subject_name.text + "," + no_of_hours.text + "," + str(expected_number_of_hours) + "," + str(
+            missing_hours) + "\n"
+        list_to_file.append(line)
+
+for line in list_to_file:
+    with open('stanje_sati.txt', 'a') as file:
+        file.write(line)
