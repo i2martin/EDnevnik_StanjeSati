@@ -66,7 +66,7 @@ for single_class in classes:
                 expected_number_of_hours = 2
         elif "Praktična nastava" in subject_name.text:
             expected_number_of_hours = 7
-        elif "Sat razrednika" in subject_name.text:
+        elif "Sat razrednika" in subject_name.text or "Likovna umjetnost" in subject_name.text or "Glazbena umjetnost" in subject_name.text or "Etika" in subject_name.text or "Vjeronauk" in subject_name.text:
             expected_number_of_hours = 1
         else:
             expected_number_of_hours = 2
