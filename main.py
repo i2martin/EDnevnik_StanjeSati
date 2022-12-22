@@ -39,8 +39,12 @@ for single_class in classes:
     # prođi kroz sve predmete
     for subject in subjects:
         driver.get(subject)
+        no_of_hours = 0
         # dohvati podatke o trenutnom broju sati
-        no_of_hours = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[1]/tbody/tr[3]/td')
+        hour_tables = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[1]/tbody/tr[3]')
+        for table in hour_tables.find_elements(By.TAG_NAME, 'td'):
+            print(table.get_attribute("innerHTML"))
+            no_of_hours = no_of_hours + int(table.get_attribute("innerHTML"))
         subject_name = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[2]/tbody/tr[1]/th')
 
         #odredi planirani broj sati
@@ -72,8 +76,8 @@ for single_class in classes:
             expected_number_of_hours = 2
         # zapiši razred, predmet i broj održanih sati
         expected_number_of_hours = expected_number_of_hours * number_of_weeks
-        missing_hours = int(no_of_hours.text) - expected_number_of_hours
-        line = subject_name.text + "," + no_of_hours.text + "," + str(expected_number_of_hours) + "," + str(
+        missing_hours = no_of_hours - expected_number_of_hours
+        line = subject_name.text + "," + str(no_of_hours) + "," + str(expected_number_of_hours) + "," + str(
             missing_hours) + "\n"
         list_to_file.append(line)
 
