@@ -1,18 +1,19 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from predmeti import odredi_normu
 from selenium.webdriver.common.keys import Keys
 import time
 
 #broj tjedana - za sad potrebno ručno upisati
-number_of_weeks = 15
+number_of_weeks = 33
 expected_number_of_hours = 0
 list_to_file = []
 driver = webdriver.Chrome('./chromedriver')
 driver.get("https://e-dnevnik.skole.hr/")
 username = driver.find_element(By.ID, "username")
-username.send_keys("")
+username.send_keys("ivan.martinovic17@skole.hr")
 pass_key = driver.find_element(By.ID, "password")
-pass_key.send_keys("")
+pass_key.send_keys("1234231434")
 log_in = driver.find_element(By.XPATH, "/html/body/div[1]/div/form/input[4]")
 log_in.click()
 
@@ -20,6 +21,8 @@ log_in.click()
 # dohvati sve razrede
 parent = driver.find_element(By.ID, "class-list")
 classes = []
+
+#dohvati poveznice na sve razredne knjige
 for single_class in parent.find_elements(By.TAG_NAME, 'a'):
     classes.append(single_class.get_attribute('href'))
 
@@ -43,7 +46,6 @@ for single_class in classes:
         # dohvati podatke o trenutnom broju sati
         hour_tables = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[1]/tbody/tr[3]')
         for table in hour_tables.find_elements(By.TAG_NAME, 'td'):
-            print(table.get_attribute("innerHTML"))
             no_of_hours = no_of_hours + int(table.get_attribute("innerHTML"))
         subject_name = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[2]/tbody/tr[1]/th')
 
