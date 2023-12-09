@@ -5,15 +5,15 @@ from selenium.webdriver.common.keys import Keys
 import time
 
 #broj tjedana - za sad potrebno ručno upisati
-number_of_weeks = 33
+number_of_weeks = 14
 expected_number_of_hours = 0
 list_to_file = []
 driver = webdriver.Chrome('./chromedriver')
 driver.get("https://e-dnevnik.skole.hr/")
 username = driver.find_element(By.ID, "username")
-username.send_keys("")
+username.send_keys("ivan.martinovic17@skole.hr")
 pass_key = driver.find_element(By.ID, "password")
-pass_key.send_keys("")
+pass_key.send_keys("1234269556")
 log_in = driver.find_element(By.XPATH, "/html/body/div[1]/div/form/input[4]")
 log_in.click()
 
@@ -49,8 +49,9 @@ for single_class in classes:
         for table in hour_tables.find_elements(By.TAG_NAME, 'td'):
             no_of_hours = no_of_hours + int(table.get_attribute("innerHTML"))
         subject_name = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[2]/tbody/tr[1]/th')
-        s_class, sub = subject_name.text.strip().replace(" ", "").split("-", maxsplit=1)
-
+        s_class, sub = subject_name.text.split("-", maxsplit=1)
+        s_class = s_class.strip()
+        sub = sub.strip()
         #odredi planirani broj sati
         expected_number_of_hours = find_weekly_hours(s_class, sub)
 
