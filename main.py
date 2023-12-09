@@ -1,6 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from predmeti import odredi_normu
+from predmeti import find_weekly_hours
 from selenium.webdriver.common.keys import Keys
 import time
 
@@ -11,9 +11,9 @@ list_to_file = []
 driver = webdriver.Chrome('./chromedriver')
 driver.get("https://e-dnevnik.skole.hr/")
 username = driver.find_element(By.ID, "username")
-username.send_keys("ivan.martinovic17@skole.hr")
+username.send_keys("")
 pass_key = driver.find_element(By.ID, "password")
-pass_key.send_keys("1234231434")
+pass_key.send_keys("")
 log_in = driver.find_element(By.XPATH, "/html/body/div[1]/div/form/input[4]")
 log_in.click()
 
@@ -28,7 +28,7 @@ for single_class in parent.find_elements(By.TAG_NAME, 'a'):
 
 for single_class in classes:
     driver.get(single_class)
-
+    time.sleep(0.1)
     # za svaki razred otvori dnevnik rada --> radni sati po predmetu
     driver.find_element(By.CLASS_NAME, "icon-dnevnik-rada").click()
     driver.find_element(By.XPATH, "/html/body/div[1]/ul/li[3]/div/a[4]").click()
@@ -43,39 +43,17 @@ for single_class in classes:
     for subject in subjects:
         driver.get(subject)
         no_of_hours = 0
+        time.sleep(0.1)
         # dohvati podatke o trenutnom broju sati
         hour_tables = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[1]/tbody/tr[3]')
         for table in hour_tables.find_elements(By.TAG_NAME, 'td'):
             no_of_hours = no_of_hours + int(table.get_attribute("innerHTML"))
         subject_name = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[2]/tbody/tr[1]/th')
+        s_class, sub = subject_name.text.strip().replace(" ", "").split("-", maxsplit=1)
 
         #odredi planirani broj sati
-        #TODO: Izraditi bazu predmeta s brojem sati
-        if "Matematika" in subject_name.text:
-            if "1.g" in subject_name.text or "2.g" in subject_name.text or "3.g" in subject_name.text or "4.g" in subject_name.text or "1.tr" in subject_name.text or "2.tr" in subject_name.text:
-                expected_number_of_hours = 4
-            elif "3.tr" in subject_name.text or "4.tr" in subject_name.text:
-                expected_number_of_hours = 3
-            elif "1.vv" in subject_name.text or "2.vv" in subject_name.text or "3.vv" in subject_name.text:
-                expected_number_of_hours = 1
-            else:
-                expected_number_of_hours = 2
-        elif "Hrvatski jezik" in subject_name.text:
-            if "1.g" in subject_name.text or "2.g" in subject_name.text or "3.g" in subject_name.text or "4.g" in subject_name.text:
-                expected_number_of_hours = 4
-            else:
-                expected_number_of_hours = 3
-        elif "Engleski jezik" in subject_name.text:
-            if "1.g" in subject_name.text or "2.g" in subject_name.text or "3.g" in subject_name.text or "4.g" in subject_name.text or "3.tr" in subject_name.text or "4.tr" in subject_name.text:
-                expected_number_of_hours = 3
-            else:
-                expected_number_of_hours = 2
-        elif "Praktična nastava" in subject_name.text:
-            expected_number_of_hours = 7
-        elif "Sat razrednika" in subject_name.text or "Likovna umjetnost" in subject_name.text or "Glazbena umjetnost" in subject_name.text or "Etika" in subject_name.text or "Vjeronauk" in subject_name.text:
-            expected_number_of_hours = 1
-        else:
-            expected_number_of_hours = 2
+        expected_number_of_hours = find_weekly_hours(s_class, sub)
+
         # zapiši razred, predmet i broj održanih sati
         expected_number_of_hours = expected_number_of_hours * number_of_weeks
         missing_hours = no_of_hours - expected_number_of_hours
