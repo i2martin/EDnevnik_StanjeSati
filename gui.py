@@ -54,10 +54,10 @@ class MainWindow(QMainWindow):
 
     def e_dnevnik(self):
         # broj tjedana - za sad potrebno ručno upisati
-        number_of_weeks = 14
-        expected_number_of_hours = 0
+        number_of_weeks = 28
         list_to_file = []
-        driver = webdriver.Chrome('./chromedriver')
+        driver = webdriver.Chrome()
+        driver.implicitly_wait(2)
         driver.get("https://e-dnevnik.skole.hr/")
         username = driver.find_element(By.ID, "username")
         username.send_keys(self.get_username())
@@ -76,10 +76,9 @@ class MainWindow(QMainWindow):
 
         for single_class in classes:
             driver.get(single_class)
-            time.sleep(0.1)
             # za svaki razred otvori dnevnik rada --> radni sati po predmetu
             driver.find_element(By.CLASS_NAME, "icon-dnevnik-rada").click()
-            driver.find_element(By.XPATH, "/html/body/div[1]/ul/li[3]/div/a[4]").click()
+            driver.find_element(By.XPATH, "/html/body/div[1]/ul/li[3]/div/a[5]").click()
 
             # prikupi sve linkove na predmete
             parent = driver.find_element(By.CLASS_NAME, 'cc-container')
@@ -91,11 +90,14 @@ class MainWindow(QMainWindow):
             for subject in subjects:
                 driver.get(subject)
                 no_of_hours = 0
-                time.sleep(0.1)
                 # dohvati podatke o trenutnom broju sati
-                hour_tables = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[1]/tbody/tr[3]')
-                for table in hour_tables.find_elements(By.TAG_NAME, 'td'):
-                    no_of_hours = no_of_hours + int(table.get_attribute("innerHTML"))
+                hour_tables = driver.find_elements(By.XPATH, ' /html/body/div[5]/div/table[1]/tbody/tr/td[2]')
+                i = 0
+                for table in hour_tables:
+                    i+=1
+                    if i == 4:
+                        break
+                    no_of_hours = no_of_hours + int(table.text)
                 subject_name = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[2]/tbody/tr[1]/th')
                 s_class, sub = subject_name.text.split("-", maxsplit=1)
                 s_class = s_class.strip()

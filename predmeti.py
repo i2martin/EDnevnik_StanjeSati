@@ -1,6 +1,5 @@
 def find_weekly_hours(single_class, subject):
     if "at" in single_class:
-        print(subject)
         if subject == "Hrvatski jezik" or subject == "Tloznanstvo" or subject == "Proizvodnja bilja" \
                 or subject == "Voćarstvo" or subject == "Specijalno voćarstvo" or subject == "Specijalna zaštita bilja" \
                 or subject == "Poljoprivredna tehnika u biljnoj proizvodnji":
