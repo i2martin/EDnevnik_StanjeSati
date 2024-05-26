@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QPushButton,
+    QMessageBox,
 )
 
 
@@ -30,89 +31,100 @@ class MainWindow(QMainWindow):
             QLineEdit(),
             QLabel("Lozinka: "),
             QLineEdit(),
+            QLabel("Broj tjedana (1-35): "),
+            QLineEdit(),
             button
         ]
+
+        self.widgets[3].setEchoMode(QLineEdit.EchoMode.Password)
 
         for w in self.widgets:
             layout.addWidget(w)
 
         widget = QWidget()
         widget.setLayout(layout)
-        # Set the central widget of the Window. Widget will expand
-        # to take up all the space in the window by default.
         self.setCentralWidget(widget)
 
     def get_username(self):
         if "@skole.hr" not in self.widgets[1].text():
-            # TODO: Pokazati poruku da je neispravno korisničko ime
-            pass
+            self.show_error_message("Neispravno korisničko ime")
+            return None
         else:
             return self.widgets[1].text()
 
     def get_password(self):
         return self.widgets[3].text()
 
+    def get_number_of_weeks(self):
+        try:
+            number_of_weeks = int(self.widgets[5].text())
+            if 1 <= number_of_weeks <= 35:
+                return number_of_weeks
+            else:
+                self.show_error_message("Broj tjedana mora biti između 1 i 35")
+                return None
+        except ValueError:
+            self.show_error_message("Molimo unesite broj između 1 i 35")
+            return None
+
+    def show_error_message(self, message):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setText(message)
+        msg.setWindowTitle("Error")
+        msg.exec()
+
     def e_dnevnik(self):
-        # broj tjedana - za sad potrebno ručno upisati
-        number_of_weeks = 28
+        username = self.get_username()
+        if username is None:
+            return
+
+        password = self.get_password()
+        number_of_weeks = self.get_number_of_weeks()
+        if number_of_weeks is None:
+            return
+
         list_to_file = []
         driver = webdriver.Chrome()
         driver.implicitly_wait(2)
         driver.get("https://e-dnevnik.skole.hr/")
-        username = driver.find_element(By.ID, "username")
-        username.send_keys(self.get_username())
+        username_elem = driver.find_element(By.ID, "username")
+        username_elem.send_keys(username)
         pass_key = driver.find_element(By.ID, "password")
-        pass_key.send_keys(self.get_password())
+        pass_key.send_keys(password)
         log_in = driver.find_element(By.XPATH, "/html/body/div[1]/div/form/input[4]")
         log_in.click()
 
-        # dohvati sve razrede
         parent = driver.find_element(By.ID, "class-list")
-        classes = []
-
-        # dohvati poveznice na sve razredne knjige
-        for single_class in parent.find_elements(By.TAG_NAME, 'a'):
-            classes.append(single_class.get_attribute('href'))
+        classes = [single_class.get_attribute('href') for single_class in parent.find_elements(By.TAG_NAME, 'a')]
 
         for single_class in classes:
             driver.get(single_class)
-            # za svaki razred otvori dnevnik rada --> radni sati po predmetu
             driver.find_element(By.CLASS_NAME, "icon-dnevnik-rada").click()
             driver.find_element(By.XPATH, "/html/body/div[1]/ul/li[3]/div/a[5]").click()
 
-            # prikupi sve linkove na predmete
             parent = driver.find_element(By.CLASS_NAME, 'cc-container')
-            subjects = []
-            for subject in parent.find_elements(By.TAG_NAME, 'a'):
-                subjects.append(subject.get_attribute('href'))
+            subjects = [subject.get_attribute('href') for subject in parent.find_elements(By.TAG_NAME, 'a')]
 
-            # prođi kroz sve predmete
             for subject in subjects:
                 driver.get(subject)
-                no_of_hours = 0
-                # dohvati podatke o trenutnom broju sati
-                hour_tables = driver.find_elements(By.XPATH, ' /html/body/div[5]/div/table[1]/tbody/tr/td[2]')
-                i = 0
-                for table in hour_tables:
-                    i+=1
-                    if i == 4:
-                        break
-                    no_of_hours = no_of_hours + int(table.text)
-                subject_name = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[2]/tbody/tr[1]/th')
-                s_class, sub = subject_name.text.split("-", maxsplit=1)
-                s_class = s_class.strip()
-                sub = sub.strip()
-                # odredi planirani broj sati
-                expected_number_of_hours = find_weekly_hours(s_class, sub)
+                no_of_hours = sum(
+                    int(table.text) for i, table in enumerate(driver.find_elements(By.XPATH, '/html/body/div[5]/div/table[1]/tbody/tr/td[2]')) if i < 3
+                )
 
-                # zapiši razred, predmet i broj održanih sati
-                expected_number_of_hours = expected_number_of_hours * number_of_weeks
+                subject_name = driver.find_element(By.XPATH, '/html/body/div[5]/div/table[2]/tbody/tr[1]/th')
+                s_class, sub = map(str.strip, subject_name.text.split("-", maxsplit=1))
+                expected_number_of_hours = find_weekly_hours(s_class, sub) * number_of_weeks
                 missing_hours = no_of_hours - expected_number_of_hours
-                line = subject_name.text + "," + str(no_of_hours) + "," + str(expected_number_of_hours) + "," + str(
-                    missing_hours) + "\n"
+                line = f"{subject_name.text},{no_of_hours},{expected_number_of_hours},{missing_hours}\n"
                 list_to_file.append(line)
 
-        for line in list_to_file:
-            with open('stanje_sati.txt', 'a') as file:
+        with open('stanje_sati.txt', 'a') as file:
+            for line in list_to_file:
                 file.write(line)
 
+
+app = QApplication(sys.argv)
+window = MainWindow()
+window.show()
+app.exec()
