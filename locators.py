@@ -1,7 +1,7 @@
 from selenium.webdriver.common.by import By
 
 # CSS_SELECTORS
-classes_links = "#class-list a"
+classes_links = "#class-book-list a"
 grade_book = "a[href='/grade_book']"
 all_students_links = ".ed-row.touch-row.student"
 all_subjects = ".ed-row.touch-row"
